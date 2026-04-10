@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# software upgrade on all containers
+#
+# Esteban M. Navas Martin
+# algodelinux@gmail.com
+#
+# Configuración
+PCT=/usr/sbin/pct
+
+for ctid in $($PCT list | grep -v -e 'stopped' -e 'backup' | tail -n +2 | cut -f1 -d" "); do
+   $PCT exec $ctid /usr/local/sbin/softwareupdate
+done

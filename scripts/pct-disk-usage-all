@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# disk usage on all containers
+#
+# Esteban M. Navas Martin
+# algodelinux@gmail.com
+#
+# Configuración
+PCT=/usr/sbin/pct
+THRESHOLD=90  # Umbral de uso del disco en porcentaje
+
+for container in $($PCT list | grep -v -e 'stopped' -e 'backup' | tail -n +2 | cut -f1 -d" "); do
+
+  # Obtener el nombre del contenedor usando pct config
+  CONTAINER_NAME=$(pct config $container | grep -i "^hostname" | awk '{print $2}')
+
+  # Obtener el uso del disco y el espacio libre del contenedor usando pct
+  DISK_INFO=$(pct exec $container -- df -h / | awk 'NR==2 {print $4, $5}')
+  FREE_SPACE=$(echo $DISK_INFO | awk '{print $1}')
+  USAGE=$(echo $DISK_INFO | awk '{print $2}' | sed 's/%//')
+
+  # Mostrar el espacio libre
+  echo "Espacio libre en el contenedor $container ($CONTAINER_NAME): $FREE_SPACE"
+
+  # Obtener el uso del disco del contenedor usando pct
+  USAGE=$($PCT exec $container -- df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
+
+  # Comprobar si el uso del disco es mayor o igual que el umbral
+  if [ "$USAGE" -ge "$THRESHOLD" ]; then
+     echo -e "Alerta: El uso del disco del contenedor $container ($CONTAINER_NAME) es del $USAGE%, que es superior al umbral del $THRESHOLD%.\n"
+  else
+     echo -e "El uso del disco del contenedor $container ($CONTAINER_NAME) es del $USAGE%, que es inferior al umbral del $THRESHOLD%.\n"
+  fi
+done

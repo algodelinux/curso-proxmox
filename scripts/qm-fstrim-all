@@ -1,0 +1,6 @@
+#!/bin/bash
+QM=/usr/sbin/qm
+
+for VMID in $($QM list | grep -v -e 'stopped' -e 'backup' | tail -n +2 | awk '{print $1}'); do
+  $QM guest exec $VMID -- bash -c "fstrim -av"
+done

@@ -1,0 +1,6 @@
+#!/bin/bash
+PCT=/usr/sbin/pct
+
+for container in $($PCT list | grep -v -e 'stopped' -e 'backup' | tail -n +2 | cut -f1 -d" "); do
+  $PCT fstrim $container
+done
